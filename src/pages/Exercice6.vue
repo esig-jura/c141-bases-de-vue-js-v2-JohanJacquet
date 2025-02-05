@@ -11,34 +11,37 @@
       >
         <v-text-field
           label="Nouvelle tâche"
+          v-model="newTask"
+          @keyup.enter="addTask"
           clearable
         >
           <template v-slot:append-inner>
-            <v-btn>Ajouter</v-btn>
+            <v-btn @click="addTask">Ajouter</v-btn>
           </template>
         </v-text-field>
 
         <v-card-title>Liste des tâches</v-card-title>
 
-        <v-card-subtitle>
+        <v-card-subtitle v-if="tasks.length === 0">
           Il n'y a pas de tâches... chanceux ! 😄
         </v-card-subtitle>
 
-        <v-list>
-          <v-list-item>
+
+        <v-list v-else>
+          <v-list-item v-for="(task, index) in sortTasks" :key="index">
             <template v-slot:prepend>
-              <v-list-item-action start>
-                <v-checkbox-btn />
+              <v-list-item-action start >
+                <v-checkbox-btn v-model="task.completed"/>
               </v-list-item-action>
             </template>
 
-            <v-list-item-title>
-              *** Titre de la tâche ***
+            <v-list-item-title :class="{ done: task.completed }">
+              {{ task['title'] }}
             </v-list-item-title>
 
             <v-list-item-subtitle>
-              Créé le *** Date ***
-              à *** Heure ***
+              Créé le {{ new Date(task.date).toLocaleDateString() }}
+              à {{ new Date(task.date).toLocaleTimeString() }}
             </v-list-item-subtitle>
           </v-list-item>
         </v-list>
@@ -51,14 +54,15 @@
 // Importation du composant ExerciceObjectifs
 import ExerciceObjectifs from "@/components/ExerciceObjectifs.vue";
 // Importation de la fonction réactive ref
-import {ref} from 'vue';
+import {ref, computed, watch} from 'vue';
+
 
 // Tableau réactif de tâches
 const tasks = ref([
   {
     "title": "Acheter du Lait",
     "completed": false,
-    "date": 1738162351961
+    "date": 1737856351933
   },
   {
     "title": "Nettoyer le four",
@@ -68,18 +72,18 @@ const tasks = ref([
   {
     "title": "Acheter de l'aspirine",
     "completed": true,
-    "date": 1737856351933
+    "date": 1738162351961
   }
 ]);
 // Nouvelle tâche à ajouter
-const newTask = ref("*** Nouvelle tâche ***");
+const newTask = ref("");
 
 /**
  * Fonction qui ajoute une nouvelle tâche à la liste.
  */
 function addTask () {
   // Ajout de la nouvelle tâche
-  tasks.value.push({
+  tasks.value.unshift({
     "title": newTask.value,
     "completed": false,
     "date": Date.now() // Date actuelle au format timestamp
@@ -87,8 +91,22 @@ function addTask () {
   // Réinitialisation de la saisie
   newTask.value = "";
 }
+
+const sortTasks = computed(() => {
+  return tasks.value.sort((a,b) => b.date - a.date)
+})
+
+watch(newTask, () => {
+  if (newTask.value.toUpperCase().indexOf("DELETE") !== -1) {
+    tasks.value = []
+    newTask.value = ""
+  }
+})
+
 </script>
 
 <style scoped lang="sass">
+.done
+  text-decoration: line-through
 
 </style>
